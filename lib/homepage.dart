@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todoapp_provider/databasehelper.dart';
 
 import 'models/todomodels.dart';
 
@@ -13,6 +14,7 @@ class homepage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final allTodos = Provider.of<TodoModel>(context);
+    allTodos.loadTodos;
 
     return Scaffold(
       appBar: AppBar(
@@ -20,10 +22,32 @@ class homepage extends StatelessWidget {
         actions: [
           ElevatedButton.icon(
               onPressed: () {
-                allTodos.removeTodo();
+                showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: Text("Do you want to delete all?"),
+                        actions: [
+                          //ElevatedButton
+                          ElevatedButton(
+                              onPressed: () {
+                                allTodos.deleteAll();
+                                Navigator.pop(context);
+                              },
+                              child: Text("Confirm delete ?")),
+
+                          //Outline button
+                          OutlinedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              child: Text("Cancel"))
+                        ],
+                      );
+                    });
               },
               icon: Icon(Icons.delete),
-              label: Text("clear"))
+              label: Text("delete All"))
         ],
       ),
       body: allTodos.items.length == 0
@@ -38,16 +62,34 @@ class homepage extends StatelessWidget {
               itemCount: allTodos.items.length,
               itemBuilder: (ctx, i) {
                 return ListTile(
-                  leading: allTodos.items[i].isimportant
+                  leading: allTodos.items[i].isimportant == "imp"
                       ? GestureDetector(
                           onTap: () {
-                            allTodos.Changeisimportant(i);
+                            allTodos.updateTodo(Todo(
+                                id: allTodos.items[i].id,
+                                title: allTodos.items[i].title,
+                                description: allTodos.items[i].description,
+                                isimportant:
+                                    allTodos.items[i].isimportant == "imp"
+                                        ? "nmp"
+                                        : "imp"));
                           },
-                          child: Icon(Icons.favorite),
+                          child: CircleAvatar(
+                            child: Icon(
+                              Icons.favorite,
+                            ),
+                          ),
                         )
                       : GestureDetector(
                           onTap: (() {
-                            allTodos.Changeisimportant(i);
+                            allTodos.updateTodo(Todo(
+                                id: allTodos.items[i].id,
+                                title: allTodos.items[i].title,
+                                description: allTodos.items[i].description,
+                                isimportant:
+                                    allTodos.items[i].isimportant == "imp"
+                                        ? "nmp"
+                                        : "imp"));
                           }),
                           child: const CircleAvatar(
                             backgroundColor: Colors.red,
@@ -81,7 +123,8 @@ class homepage extends StatelessWidget {
                                     //ElevatedButton
                                     ElevatedButton(
                                         onPressed: () {
-                                          allTodos.deleteTodo(i);
+                                          allTodos
+                                              .deleteTodo(allTodos.items[i].id);
                                           Navigator.pop(context);
                                         },
                                         child: Text("Confirm delete ?")),
@@ -117,9 +160,14 @@ addOrUpdateDialog(BuildContext context, bool isadded,
     {Todo? todo, int? index}) {
   TextEditingController ctitle = TextEditingController();
   TextEditingController cDesc = TextEditingController();
+  TextEditingController cId = TextEditingController();
+  TextEditingController cimp = TextEditingController();
+
   if (!isadded) {
     ctitle.text = todo!.title;
     cDesc.text = todo.description;
+    cId.text = todo.id.toString();
+    cimp.text = todo.isimportant;
   }
 
   final allTodos = Provider.of<TodoModel>(context, listen: false);
@@ -127,7 +175,7 @@ addOrUpdateDialog(BuildContext context, bool isadded,
   // Create AlertDialog
   AlertDialog alert = AlertDialog(
     title: isadded ? Text("Add Todo ") : Text("Update"),
-    content: Column(children: [
+    content: Column(mainAxisSize: MainAxisSize.min, children: [
       TextField(
         controller: ctitle,
         decoration: InputDecoration(label: Text("Title")),
@@ -142,19 +190,17 @@ addOrUpdateDialog(BuildContext context, bool isadded,
           onPressed: () {
             if (isadded) {
               allTodos.addTodo(Todo(
-                  id: Random().nextInt(1000000),
+                  id: Random().nextInt(1000),
                   title: ctitle.text,
                   description: cDesc.text,
-                  isimportant: true));
+                  isimportant: ""));
             } else {
               // Update Code
-              allTodos.updateTodo(
-                  index!,
-                  Todo(
-                      id: Random().nextInt(1000000),
-                      title: ctitle.text,
-                      description: cDesc.text,
-                      isimportant: true));
+              allTodos.updateTodo(Todo(
+                  id: int.parse(cId.text),
+                  title: ctitle.text,
+                  description: cDesc.text,
+                  isimportant: cimp.text));
             }
             Navigator.pop(context);
           },
