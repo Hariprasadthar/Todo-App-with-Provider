@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_unnecessary_containers, prefer_const_constructors
+
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -14,7 +16,7 @@ class homepage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Center(child: const Text("Todo App")),
+        title: const Center(child: Text("Todo App")),
         actions: [
           ElevatedButton.icon(
               onPressed: () {
@@ -26,7 +28,7 @@ class homepage extends StatelessWidget {
       ),
       body: allTodos.items.length == 0
           ? Container(
-              child: Center(
+              child: const Center(
                   child: Text(
                 "not found Todo\n clk + to add",
                 style: TextStyle(fontSize: 21, fontWeight: FontWeight.bold),
@@ -47,7 +49,7 @@ class homepage extends StatelessWidget {
                           onTap: (() {
                             allTodos.Changeisimportant(i);
                           }),
-                          child: CircleAvatar(
+                          child: const CircleAvatar(
                             backgroundColor: Colors.red,
                             child: Icon(Icons.favorite_outline_rounded),
                           ),
@@ -60,7 +62,10 @@ class homepage extends StatelessWidget {
                     child: Row(children: [
                       Flexible(
                           child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          addOrUpdateDialog(context, false,
+                              todo: allTodos.items[i], index: i);
+                        },
                         color: Colors.brown,
                         icon: Icon(Icons.edit),
                       )),
@@ -101,21 +106,27 @@ class homepage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () {
-          showAlertDialog(context);
+          addOrUpdateDialog(context, true);
         },
       ),
     );
   }
 }
 
-showAlertDialog(BuildContext context) {
+addOrUpdateDialog(BuildContext context, bool isadded,
+    {Todo? todo, int? index}) {
   TextEditingController ctitle = TextEditingController();
   TextEditingController cDesc = TextEditingController();
+  if (!isadded) {
+    ctitle.text = todo!.title;
+    cDesc.text = todo.description;
+  }
+
   final allTodos = Provider.of<TodoModel>(context, listen: false);
 
   // Create AlertDialog
   AlertDialog alert = AlertDialog(
-    title: Text("Add Todo "),
+    title: isadded ? Text("Add Todo ") : Text("Update"),
     content: Column(children: [
       TextField(
         controller: ctitle,
@@ -129,12 +140,22 @@ showAlertDialog(BuildContext context) {
     actions: [
       ElevatedButton(
           onPressed: () {
-            var rng = Random();
-            allTodos.addTodo(Todo(
-                id: rng.nextInt(10000),
-                title: ctitle.text,
-                description: cDesc.text,
-                isimportant: true));
+            if (isadded) {
+              allTodos.addTodo(Todo(
+                  id: Random().nextInt(1000000),
+                  title: ctitle.text,
+                  description: cDesc.text,
+                  isimportant: true));
+            } else {
+              // Update Code
+              allTodos.updateTodo(
+                  index!,
+                  Todo(
+                      id: Random().nextInt(1000000),
+                      title: ctitle.text,
+                      description: cDesc.text,
+                      isimportant: true));
+            }
             Navigator.pop(context);
           },
           child: Text("Save")),

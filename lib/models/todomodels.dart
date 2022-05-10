@@ -36,6 +36,15 @@ class TodoModel extends ChangeNotifier {
     notifyListeners();
   }
 
+
+  
+ /// Update Todo
+  void updateTodo(int index, Todo todo) {
+    _todos[index].title = todo.title;
+    _todos[index].description = todo.description;
+    notifyListeners();
+  }
+
   // To make is important
   void Changeisimportant(int i) {
     _todos[i].isimportant = !_todos[i].isimportant;
